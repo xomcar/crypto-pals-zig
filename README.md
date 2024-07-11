@@ -1,3 +1,2 @@
 # Run
-
-Use ```zig build run -- <challenge #>```
+Run ```zig build test```
