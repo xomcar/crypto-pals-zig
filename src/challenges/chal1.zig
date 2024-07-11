@@ -9,6 +9,8 @@ pub fn solve() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     const plain_input = try hex.decode(hex_input, allocator);
+    defer allocator.free(plain_input);
     const output = try base64.encode(plain_input, allocator);
+    defer allocator.free(output);
     try std.testing.expect(std.mem.eql(u8, expected_output, output));
 }

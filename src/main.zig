@@ -23,6 +23,12 @@ pub fn main() !void {
         3 => {
             try chals.c3.solve();
         },
+        4 => {
+            try chals.c4.solve();
+        },
+        5 => {
+            try chals.c5.solve();
+        },
         else => {
             return error.InvalidParam;
         },

@@ -2,7 +2,7 @@ const std = @import("std");
 
 const english_frequency = std.mem.zeroes([256]f32);
 
-pub fn fixed(in1: []const u8, in2: []const u8, a: std.mem.Allocator) ![]u8 {
+pub fn apply_fixed(in1: []const u8, in2: []const u8, a: std.mem.Allocator) ![]u8 {
     if (in1.len != in2.len) return error.InputLengthMismatch;
     var output = try a.alloc(u8, in1.len);
     var i: usize = 0;
@@ -13,11 +13,21 @@ pub fn fixed(in1: []const u8, in2: []const u8, a: std.mem.Allocator) ![]u8 {
     return output;
 }
 
-pub fn repeated(key: u8, input: []const u8, a: std.mem.Allocator) ![]u8 {
+pub fn apply_single_key(key: u8, input: []const u8, a: std.mem.Allocator) ![]u8 {
     var output = try a.alloc(u8, input.len);
     var i: usize = 0;
     for (input) |b| {
         output[i] = b ^ key;
+        i += 1;
+    }
+    return output;
+}
+
+pub fn apply_repeating_key(key: []const u8, input: []const u8, a: std.mem.Allocator) ![]u8 {
+    var output = try a.alloc(u8, input.len);
+    var i: usize = 0;
+    for (input) |b| {
+        output[i] = b ^ key[i % key.len];
         i += 1;
     }
     return output;
@@ -32,7 +42,7 @@ pub fn hamming_distance(in1: u8, in2: u8) usize {
     return bits_set;
 }
 
-pub fn frequency_analysis(text: []const u8, fs: [256]f32) f32 {
+pub fn compute_frequency_analysis(text: []const u8, fs: [256]f32) f32 {
     var freq = std.mem.zeroes([256]f32);
     for (text) |c| {
         freq[c] += 1.0;

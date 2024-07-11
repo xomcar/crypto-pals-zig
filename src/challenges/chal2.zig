@@ -8,10 +8,14 @@ pub fn solve() !void {
     const in2 = "686974207468652062756c6c277320657965";
     const expected_output = "746865206b696420646f6e277420706c6179";
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    const in1_bytes = try hex.decode(in1, allocator);
-    const in2_bytes = try hex.decode(in2, allocator);
-    const xord = try xor.fixed(in1_bytes, in2_bytes, allocator);
-    const expected_output_bytes = try hex.decode(expected_output, allocator);
+    const a = gpa.allocator();
+    const in1_bytes = try hex.decode(in1, a);
+    defer a.free(in1_bytes);
+    const in2_bytes = try hex.decode(in2, a);
+    defer a.free(in2_bytes);
+    const xord = try xor.apply_fixed(in1_bytes, in2_bytes, a);
+    defer a.free(xord);
+    const expected_output_bytes = try hex.decode(expected_output, a);
+    defer a.free(expected_output_bytes);
     try std.testing.expect(std.mem.eql(u8, xord, expected_output_bytes));
 }
