@@ -6,14 +6,15 @@ const hex = @import("../hex.zig");
 test "challenge 3" {
     const data_file = try std.fs.cwd().openFile("data/4.txt", .{});
     const data_reader = data_file.reader();
+    var buf: [1024]u8 = undefined;
     const freq = try io.frequency_table_from("data/shakespeare.txt");
     const a = std.testing.allocator;
-    var buf: [1024]u8 = undefined;
 
     const expected_text = "Now that the party is jumping\n";
     var min_dist = std.math.floatMax(f32);
     var best_line: ?[]u8 = null;
     defer a.free(best_line.?);
+
     while (try data_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         const enc_text = try hex.decode(line, a);
         defer a.free(enc_text);

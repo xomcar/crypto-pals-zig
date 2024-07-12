@@ -33,13 +33,25 @@ pub fn apply_repeating_key(key: []const u8, input: []const u8, a: std.mem.Alloca
     return output;
 }
 
-pub fn hamming_distance(in1: u8, in2: u8) usize {
-    const res = in1 ^ in2;
+fn hamming_weight(b: u8) usize {
     var bits_set: usize = 0;
-    while (res != 0) : (res >>= 1) {
-        bits_set +%= res & 1;
+    var datum = b;
+    while (datum != 0) : (datum >>= 1) {
+        bits_set +%= datum & 1;
     }
     return bits_set;
+}
+
+pub fn hamming_distance(in1: []const u8, in2: []const u8) !usize {
+    if (in1.len != in2.len) {
+        return error.InputLengthMismatch;
+    }
+    var distance: usize = 0;
+    for (in1, in2) |a, b| {
+        const res = a ^ b;
+        distance += hamming_weight(res);
+    }
+    return distance;
 }
 
 pub fn compute_frequency_analysis(text: []const u8, fs: [256]f32) f32 {
@@ -52,4 +64,8 @@ pub fn compute_frequency_analysis(text: []const u8, fs: [256]f32) f32 {
         dist += @abs(f1 / freq.len - f2);
     }
     return dist;
+}
+
+test "hamming distance" {
+    try std.testing.expect(37 == try hamming_distance("this is a test", "wokka wokka!!!"));
 }

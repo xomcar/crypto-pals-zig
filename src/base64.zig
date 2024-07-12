@@ -5,12 +5,12 @@ const PADDING: u8 = '=';
 const BASE64_ENCODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const BASE64_DECODE_ALPHABET = create_decode_table();
 
-fn create_decode_table() [256]u8 {
-    var decode_table: [256]u8 = [_]u8{0} ** 256;
+pub fn create_decode_table() [256]u8 {
+    var decode_table: [256]u8 = [_]u8{255} ** 256;
     comptime {
         var i: usize = 0;
         while (i < BASE64_ENCODE_ALPHABET.len) : (i += 1) {
-            decode_table[BASE64_ENCODE_ALPHABET[i]] = @intCast(i);
+            decode_table[BASE64_ENCODE_ALPHABET[i]] = @as(u8, i);
         }
     }
     return decode_table;
@@ -72,7 +72,7 @@ pub fn decode(input: []const u8, a: std.mem.Allocator) ![]u8 {
             break;
         }
         const dec_val = BASE64_DECODE_ALPHABET[c];
-        if (dec_val == 0) {
+        if (dec_val == 255) {
             return error.InvalidBase64String;
         }
         buf[buf_i] = dec_val;
@@ -112,6 +112,8 @@ test "base64_from_hex" {
     const input_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
     const output = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
     const input = try hex.decode(input_hex, test_al);
+    const input2 = try decode("Y2FybyBhbWljbyB0aSBzY3Jpdm8gY29zaSBtaSBkaXN0cmFnZ28gdW4gcG8gZSBzZWkgcA==", test_al);
+    try std.testing.expect(std.mem.eql(u8, input2, "caro amico ti scrivo cosi mi distraggo un po e sei p"));
     const enc = try encode(input, test_al);
     const dec = try decode(enc, test_al);
     try std.testing.expect(std.mem.eql(u8, enc, output));
@@ -119,4 +121,5 @@ test "base64_from_hex" {
     test_al.free(enc);
     test_al.free(dec);
     test_al.free(input);
+    test_al.free(input2);
 }

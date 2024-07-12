@@ -4,4 +4,5 @@ comptime {
     _ = @import("challenges/chal3.zig");
     _ = @import("challenges/chal4.zig");
     _ = @import("challenges/chal5.zig");
+    _ = @import("challenges/chal6.zig");
 }
