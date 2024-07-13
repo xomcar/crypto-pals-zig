@@ -14,4 +14,10 @@ pub fn main() !void {
     const output = try base64.encode(plain_input, a);
     defer a.free(output);
     try std.testing.expect(std.mem.eql(u8, expected_output, output));
+
+    std.debug.print("hex encoded input:\n\t{s}\nplain text:\n\t{s}\nbase64 encoded output:\n\t{s}\n", .{
+        hex_input,
+        plain_input,
+        output,
+    });
 }

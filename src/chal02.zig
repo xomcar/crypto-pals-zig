@@ -18,4 +18,10 @@ pub fn main() !void {
     const expected_output_bytes = try hex.decode(expected_output, a);
     defer a.free(expected_output_bytes);
     try std.testing.expect(std.mem.eql(u8, xord, expected_output_bytes));
+
+    std.debug.print("input 1:\n\t{s}\ninput 2:\n\t{s}\nxor: \n{s}\n", .{
+        in1_bytes,
+        in2_bytes,
+        xord,
+    });
 }

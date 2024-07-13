@@ -13,11 +13,16 @@ pub fn main() !void {
     const expected_text = "Now that the party is jumping\n";
     var min_dist = std.math.floatMax(f32);
     var best_line: ?[]u8 = null;
-    // defer a.free(best_line.?);
+    var best_key: u8 = undefined;
+    var candidate_text: [1024]u8 = undefined;
+    defer a.free(best_line.?);
 
-    while (try data_reader.readUntilDelimiterOrEof(&buf, '\r')) |line| {
-        std.debug.print("{} {s}\n", .{ line.len, line });
-        const enc_text = try hex.decode(line, a);
+    while (try data_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+        var trimmed_line = line;
+        if (line[line.len - 1] == '\r') {
+            trimmed_line = line[0 .. line.len - 1];
+        }
+        const enc_text = try hex.decode(trimmed_line, a);
         defer a.free(enc_text);
         var key: u8 = 0;
         while (key < 255) : (key += 1) {
@@ -29,10 +34,18 @@ pub fn main() !void {
                     a.free(best_line.?);
                 }
                 best_line = dec_text;
+                best_key = key;
+                @memcpy(candidate_text[0..enc_text.len], enc_text);
             } else {
                 a.free(dec_text);
             }
         }
     }
     try std.testing.expect(std.mem.eql(u8, expected_text, best_line.?));
+
+    std.debug.print("encryped input:\n\t{s}\ndecryped output:\n\t{s}\nwith key:\n\t{}\n", .{
+        candidate_text,
+        best_line.?,
+        best_key,
+    });
 }

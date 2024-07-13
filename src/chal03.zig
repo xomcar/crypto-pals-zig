@@ -34,4 +34,10 @@ pub fn main() !void {
 
     try std.testing.expect(std.mem.eql(u8, expected_text, best_dec.?));
     try std.testing.expect(expected_key == best_key);
+
+    std.debug.print("encrypted input:\n\t{s}\ndecoded to:\n\t{s}\nwith key:\n\t{}\n", .{
+        input_bytes,
+        best_dec.?,
+        best_key,
+    });
 }
