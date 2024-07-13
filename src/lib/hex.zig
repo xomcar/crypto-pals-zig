@@ -2,7 +2,7 @@ const std = @import("std");
 
 const HEX_CHARS = "0123456789abcdef";
 
-fn hex_char_to_value(c: u8) !u8 {
+fn hexCharToValue(c: u8) !u8 {
     if (c >= '0' and c <= '9') {
         return c - '0';
     } else if (c >= 'a' and c <= 'f') {
@@ -25,8 +25,8 @@ pub fn decode(hex_string: []const u8, a: std.mem.Allocator) ![]u8 {
     const bytes = try a.alloc(u8, byte_count);
     var i: usize = 0;
     while (i < byte_count) : (i += 1) {
-        const high_nibble = try hex_char_to_value(hex_string[i * 2]);
-        const low_nibble = try hex_char_to_value(hex_string[i * 2 + 1]);
+        const high_nibble = try hexCharToValue(hex_string[i * 2]);
+        const low_nibble = try hexCharToValue(hex_string[i * 2 + 1]);
         bytes[i] = (high_nibble << 4) | low_nibble;
     }
 

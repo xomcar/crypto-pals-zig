@@ -1,13 +1,12 @@
 const std = @import("std");
-const xor = @import("../xor_cipher.zig");
-const io = @import("../io.zig");
-const hex = @import("../hex.zig");
-const base64 = @import("../base64.zig");
+const xor = @import("lib/xor_cipher.zig");
+const hex = @import("lib/hex.zig");
+const base64 = @import("lib/base64.zig");
 
-test "challenge 6" {
-    const a = std.testing.allocator;
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const a = gpa.allocator();
     const data_file = try std.fs.cwd().openFile("data/6.txt", .{});
-    const freq = try io.frequency_table_from("data/shakespeare.txt");
     var buffer: [1024]u8 = undefined;
     var data_buffer = try a.alloc(u8, (try data_file.stat()).size);
     defer a.free(data_buffer);
@@ -20,8 +19,8 @@ test "challenge 6" {
     const data = data_buffer[0..data_buffer_index];
     const hex_data = try base64.decode(data, a);
     defer a.free(hex_data);
-    
-    std.debug.print("{any}", .{base64.create_decode_table()});
+
+    std.debug.print("{any}", .{base64.createDecodeTable()});
     const decoded_data = try hex.decode(hex_data, a);
     defer a.free(decoded_data);
     var best_dist: usize = std.math.maxInt(usize);
@@ -29,7 +28,7 @@ test "challenge 6" {
     for (2..40) |key_len| {
         var norm_dist: usize = 0;
         for (0..4) |i| {
-            const d = try xor.hamming_distance(decoded_data[2 * i .. 2 * i + key_len], decoded_data[2 * i + key_len .. 2 * i + (2 * key_len)]);
+            const d = try xor.hammingDistance(decoded_data[2 * i .. 2 * i + key_len], decoded_data[2 * i + key_len .. 2 * i + (2 * key_len)]);
             norm_dist += d;
         }
         norm_dist /= key_len;
@@ -56,9 +55,9 @@ test "challenge 6" {
         var min_dist = std.math.floatMax(f32);
         var candidate: u8 = 0;
         while (candidate < 255) : (candidate += 1) {
-            const dec = try xor.apply_single_key(candidate, buf, a);
+            const dec = try xor.applySingleKey(candidate, buf, a);
             defer a.free(dec);
-            const d = xor.compute_frequency_analysis(dec, freq);
+            const d = xor.computeFrequencyAnalysis(dec);
             if (d < min_dist) {
                 min_dist = d;
                 best_candidate = candidate;
