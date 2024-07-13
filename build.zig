@@ -6,10 +6,10 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
 
     const freq_path = "src/lib/frequency.zig";
-    _ = std.fs.cwd().statFile(freq_path) catch {
-        const freq = try io.frequencyTableFrom("data/shakespeare.txt");
-        try io.exportFrequencyTableToFile(freq_path, freq);
-    };
+    //_ = std.fs.cwd().statFile(freq_path) catch {
+    const freq = try io.frequencyTableFromFile("data/shakespeare.txt");
+    try io.exportFrequencyTableToFile(freq_path, freq);
+    // };
 
     var challenge_dir = try std.fs.cwd().openDir("src/", .{ .iterate = true });
     var iterator = challenge_dir.iterate();

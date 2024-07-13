@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn frequencyTableFrom(filename: []const u8) ![256]f32 {
+pub fn frequencyTableFromFile(filename: []const u8) ![256]f32 {
     const data_file = try std.fs.cwd().openFile(filename, .{});
     defer data_file.close();
     var buffer: [1]u8 = undefined;
@@ -11,10 +11,8 @@ pub fn frequencyTableFrom(filename: []const u8) ![256]f32 {
     while (read != 0) {
         read = try buf_reader.read(&buffer);
         const c = buffer[0];
-        if ((c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z')) {
-            freqs[c] += 1.0;
-            sum += 1.0;
-        }
+        freqs[c] += 1.0;
+        sum += 1.0;
     }
     for (&freqs) |*f| {
         f.* /= sum;
@@ -28,8 +26,10 @@ pub fn exportFrequencyTableToFile(freq_path: []const u8, freqs: [256]f32) !void 
 
     try f.writeAll("pub const freq : [256]f32 = .{\n");
     var buf: [256]u8 = undefined;
+    var i: usize = 0;
     for (freqs) |freq| {
-        const str = try std.fmt.bufPrint(&buf, "    {d},\n", .{freq});
+        const str = try std.fmt.bufPrint(&buf, "    {d}, //{}\n", .{ freq, i });
+        i += 1;
         try f.writeAll(str);
     }
     try f.writeAll("};\n");
