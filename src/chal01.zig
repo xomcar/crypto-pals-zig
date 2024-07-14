@@ -1,3 +1,4 @@
+// Convert hex to base64
 const std = @import("std");
 const xor = @import("lib/xor_cipher.zig");
 const hex = @import("lib/hex.zig");

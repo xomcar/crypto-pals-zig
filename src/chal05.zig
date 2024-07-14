@@ -1,3 +1,4 @@
+// Implement repeating-key XOR
 const std = @import("std");
 const freqs = @import("lib/frequency.zig").freq;
 const xor = @import("lib/xor_cipher.zig");

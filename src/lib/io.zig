@@ -34,3 +34,27 @@ pub fn exportFrequencyTableToFile(freq_path: []const u8, freqs: [256]f32) !void 
     }
     try f.writeAll("};\n");
 }
+
+pub fn readMultilineFile(path: []const u8, a: std.mem.Allocator) ![]const u8 {
+    const data_file = try std.fs.cwd().openFile(path, .{});
+    var buffer: [1024]u8 = undefined;
+    var data_buffer = try a.alloc(u8, (try data_file.stat()).size);
+    const data_reader = data_file.reader();
+    var data_buffer_index: usize = 0;
+    while (try data_reader.readUntilDelimiterOrEof(&buffer, '\n')) |line| {
+        if (line[line.len - 1] != '\r') {
+            @memcpy(
+                data_buffer[data_buffer_index .. data_buffer_index + line.len],
+                line,
+            );
+            data_buffer_index += line.len;
+        } else {
+            @memcpy(
+                data_buffer[data_buffer_index .. data_buffer_index + line.len - 1],
+                line[0 .. line.len - 1],
+            );
+            data_buffer_index += line.len - 1;
+        }
+    }
+    return try a.realloc(data_buffer, data_buffer_index);
+}

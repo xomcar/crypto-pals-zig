@@ -1,9 +1,15 @@
+// Fixed XOR
 const std = @import("std");
 const xor = @import("lib/xor_cipher.zig");
 const hex = @import("lib/hex.zig");
 const base64 = @import("lib/base64.zig");
 
 pub fn main() !void {
+    const start = std.time.milliTimestamp();
+    defer {
+        const end = std.time.milliTimestamp();
+        std.debug.print("took: {} ms", .{end - start});
+    }
     const in1 = "1c0111001f010100061a024b53535009181c";
     const in2 = "686974207468652062756c6c277320657965";
     const expected_output = "746865206b696420646f6e277420706c6179";

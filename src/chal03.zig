@@ -1,9 +1,15 @@
+// Single-byte XOR cipher
 const std = @import("std");
 const xor = @import("lib/xor_cipher.zig");
 const hex = @import("lib/hex.zig");
 const base64 = @import("lib/base64.zig");
 
 pub fn main() !void {
+    const start = std.time.milliTimestamp();
+    defer {
+        const end = std.time.milliTimestamp();
+        std.debug.print("took: {} ms", .{end - start});
+    }
     const expected_text = "Cooking MC's like a pound of bacon";
     const expected_key: u8 = 88;
     const input_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
