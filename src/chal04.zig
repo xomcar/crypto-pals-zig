@@ -13,40 +13,38 @@ pub fn main() !void {
 
     const expected_text = "Now that the party is jumping\n";
     var min_dist = std.math.floatMax(f32);
-    var best_line: ?[]u8 = null;
+    var best_output: []u8 = undefined;
+    var best_input: []u8 = undefined;
     var best_key: u8 = undefined;
-    var candidate_text: [1024]u8 = undefined;
-    defer a.free(best_line.?);
+    var candidate_text_input_buffer: [1024]u8 = undefined;
+    var candidate_text_output_buffer: [1024]u8 = undefined;
 
     while (try data_reader.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        var trimmed_line = line;
-        if (line[line.len - 1] == '\r') {
-            trimmed_line = line[0 .. line.len - 1];
-        }
-        const enc_text = try hex.decode(trimmed_line, a);
-        defer a.free(enc_text);
+        const hex_dec_buffer = try a.alloc(u8, line.len / 2);
+        defer a.free(hex_dec_buffer);
+        const enc_text = try hex.decode(line, hex_dec_buffer);
+
         var key: u8 = 0;
+        const dec_text_buffer = try a.alloc(u8, enc_text.len);
+        defer a.free(dec_text_buffer);
         while (key < 255) : (key += 1) {
-            const dec_text = try xor.applySingleKey(key, enc_text, a);
+            const dec_text = try xor.applySingleKey(key, enc_text, dec_text_buffer);
             const dist = xor.computeFrequencyAnalysis(dec_text);
             if (dist < min_dist) {
                 min_dist = dist;
-                if (best_line != null) {
-                    a.free(best_line.?);
-                }
-                best_line = dec_text;
                 best_key = key;
-                @memcpy(candidate_text[0..enc_text.len], enc_text);
-            } else {
-                a.free(dec_text);
+                @memcpy(candidate_text_input_buffer[0..enc_text.len], enc_text);
+                @memcpy(candidate_text_output_buffer[0..dec_text.len], dec_text);
+                best_input = candidate_text_input_buffer[0..enc_text.len];
+                best_output = candidate_text_output_buffer[0..dec_text.len];
             }
         }
     }
-    try std.testing.expect(std.mem.eql(u8, expected_text, best_line.?));
+    try std.testing.expect(std.mem.eql(u8, expected_text, best_output));
 
     std.debug.print("encryped input:\n\t{s}\ndecryped output:\n\t{s}\nwith key:\n\t{}\n", .{
-        candidate_text,
-        best_line.?,
+        best_input,
+        best_output,
         best_key,
     });
 }

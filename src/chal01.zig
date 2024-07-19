@@ -10,8 +10,10 @@ pub fn main() !void {
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const a = gpa.allocator();
-    const plain_input = try hex.decode(hex_input, a);
-    defer a.free(plain_input);
+    const hex_dec_buffer = try a.alloc(u8, hex_input.len / 2);
+    defer a.free(hex_dec_buffer);
+    const plain_input = try hex.decode(hex_input, hex_dec_buffer);
+
     const output = try base64.encode(plain_input, a);
     defer a.free(output);
     try std.testing.expect(std.mem.eql(u8, expected_output, output));

@@ -14,10 +14,16 @@ pub fn main() !void {
         "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f";
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const a = gpa.allocator();
-    const encrypted = try xor.applyRepeatingKey("ICE", input, a);
-    defer a.free(encrypted);
-    const encoded = try hex.encode(encrypted, a);
-    defer a.free(encoded);
+    const encrypted_buffer = try a.alloc(u8, input.len);
+    defer a.free(encrypted_buffer);
+    const encrypted = try xor.applyRepeatingKey("ICE", input, encrypted_buffer);
+
+    const hex_buffer = try a.alloc(u8, encrypted.len * 2);
+    defer a.free(hex_buffer);
+
+    const encoded = try hex.encode(encrypted, hex_buffer);
 
     try std.testing.expect(std.mem.eql(u8, encoded, expected));
+
+    std.debug.print("text input:\n{s}\nencoded text:\n{s}\n", .{ input, encoded });
 }

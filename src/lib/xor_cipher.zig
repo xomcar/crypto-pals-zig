@@ -1,35 +1,34 @@
 const std = @import("std");
 const english_freqs = @import("frequency.zig").freq;
 
-pub fn applyFixed(in1: []const u8, in2: []const u8, a: std.mem.Allocator) ![]u8 {
+pub fn applyFixed(in1: []const u8, in2: []const u8, output: []u8) ![]u8 {
     if (in1.len != in2.len) return error.InputLengthMismatch;
-    var output = try a.alloc(u8, in1.len);
     var i: usize = 0;
     for (in1, in2) |e1, e2| {
         output[i] = e1 ^ e2;
         i += 1;
     }
-    return output;
+    return output[0..i];
 }
 
-pub fn applySingleKey(key: u8, input: []const u8, a: std.mem.Allocator) ![]u8 {
-    var output = try a.alloc(u8, input.len);
+pub fn applySingleKey(key: u8, input: []const u8, output: []u8) ![]u8 {
+    std.debug.assert(output.len >= input.len);
     var i: usize = 0;
     for (input) |b| {
         output[i] = b ^ key;
         i += 1;
     }
-    return output;
+    return output[0..i];
 }
 
-pub fn applyRepeatingKey(key: []const u8, input: []const u8, a: std.mem.Allocator) ![]u8 {
-    var output = try a.alloc(u8, input.len);
+pub fn applyRepeatingKey(key: []const u8, input: []const u8, output: []u8) ![]u8 {
+    std.debug.assert(output.len >= input.len);
     var i: usize = 0;
     for (input) |b| {
         output[i] = b ^ key[i % key.len];
         i += 1;
     }
-    return output;
+    return output[0..i];
 }
 
 fn hammingWeight(b: u8) usize {
@@ -98,28 +97,33 @@ pub fn findEncryptionKeyLength(encrypted_text: []const u8) !usize {
 }
 
 pub fn crackXorCipher(key_len: usize, encrypted_text: []const u8, a: std.mem.Allocator) !struct { []u8, []u8 } {
-    var encrypted_word = try a.alloc(u8, key_len);
-    defer a.free(encrypted_word);
+    std.debug.assert(encrypted_text.len >= key_len);
+    var encrypted_chunk_buffer = try a.alloc(u8, key_len);
+    defer a.free(encrypted_chunk_buffer);
+
     var secret = try a.alloc(u8, key_len);
+
+    const decrypted_text_buffer = try a.alloc(u8, encrypted_text.len);
 
     for (0..key_len) |nth_key| {
         for (0..key_len) |i| {
-            encrypted_word[i] = encrypted_text[nth_key + i * key_len];
+            encrypted_chunk_buffer[i] = encrypted_text[nth_key + i * key_len];
         }
-        var best_candidate: u8 = 0;
+
+        var best_candidate_key: u8 = 0;
         var min_dist = std.math.floatMax(f32);
-        var candidate: u8 = 0;
-        while (candidate < 255) : (candidate += 1) {
-            const dec = try applySingleKey(candidate, encrypted_word, a);
-            defer a.free(dec);
-            const d = computeFrequencyAnalysis(dec);
+        var candidate_key: u8 = 0;
+        while (candidate_key < 255) : (candidate_key += 1) {
+            const decrypted_word = try applySingleKey(candidate_key, encrypted_chunk_buffer, decrypted_text_buffer);
+            const d = computeFrequencyAnalysis(decrypted_word);
             if (d < min_dist) {
                 min_dist = d;
-                best_candidate = candidate;
+                best_candidate_key = candidate_key;
             }
         }
-        secret[nth_key] = best_candidate;
+        secret[nth_key] = best_candidate_key;
     }
-    const decrypted_data = try applyRepeatingKey(secret, encrypted_text, a);
-    return .{ secret, decrypted_data };
+
+    const decrypted_text = try applyRepeatingKey(secret, encrypted_text, decrypted_text_buffer);
+    return .{ secret, decrypted_text };
 }
